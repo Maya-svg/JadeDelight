@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> 
+<title>Jade Delight</title>
+<style>
+	body{ 
+		background-color: rgba(94, 240, 228, 0.664);
+		margin-left: 20%; 
+		
+	}
+	h1{
+		position:relative;
+		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+	}
+	.button {
+		background-color: rgb(112, 177, 123);
+		border: 2px solid rgb(51, 153, 85);
+	}
+</style>
+</head>
+
+<body>
+<script language="javascript">
+
+// defining the menu items -> kinda like a struct 
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost = cost;
+}
+
+// implementing food items on the menu 
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 4.5),
+	new MenuItem("Sweet and Sour Pork", 6.25),
+	new MenuItem("Shrimp Lo Mein", 5.25),
+	new MenuItem("Moo Shi Chicken", 6.5),
+	new MenuItem("Fried Rice", 2.35)
+);
+
+// Drop down select menue -> selecting quantity
+function makeSelect(name, minRange, maxRange)
+{
+	var t = "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+}
+</script>
+
+<!-- Start of Design  -->
+<h1>Jade Delight</h1>
+
+<!-- Form Creation -->
+<form>
+<p>First Name: <input type="text"  name='fname' /></p>
+<p>Last Name*:  <input type="text"  name='lname' /></p>
+<p class="visibility">Street: <input type="text"  name='street' /></p>
+<p class="visibility">City: <input type="text"  name='city' /></p>
+<p>Phone*: <input type="text"  name='phone' /></p>
+
+<!-- Choosing between pickup or delivery -->
+<p> 
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name="p_or_d" value = 'delivery'/>Delivery
+</p>
+
+<!-- Layout of table  -->
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+
+<!-- Number of times the menuItems table is shown -->
+<script language="javascript"> 
+  var s = "";
+//   makes a row for each item on the menu
+	count = 0;
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr><td>";
+	  s += makeSelect("quan" + i, 0, 10); 
+	  s += "</td><td>" + menuItems[i].name + "</td>";
+	  s += "<td> $ " + menuItems[i].cost.toFixed(2) + "</td>";
+	  s += "<td>$<input type='text' name='cost'/></td></tr>"; //this is the total cost fil in 
+  }
+  // Write the table to the current document. 
+  document.writeln(s);
+</script>
+</table>
+
+<!-- Bottom of the reciept aspects  -->
+<p>Subtotal: 
+   $<input type="text"  name='subtotal' id="subtotal" />
+</p>
+<p>Mass tax 6.25%:
+  $ <input type="text"  name='tax' id="tax" />
+</p>
+<p>Total: $ <input type="text"  name='total' id="total" />
+</p>
+
+<!-- submit button -->
+<input type = "button" class ="button" value = "Submit Order" onclick="validation()"/>
+
+</form>
+
+<!-- My Code Starts Here -->
+<script language="javascript">
+	purchases = [];
+	delivery = new Boolean(false);
+	itemTotalCost = 0; 
+	time = "";
+
+	for(i=0; i<menuItems.length;i++){
+		document.getElementsByName('cost')[i].value = 0; 
+	}
+	document.getElementById("subtotal").value = 0;
+
+	$(document).ready(function(){
+
+		$(".visibility").hide();
+
+		$('select').change(function(){
+			// The selected quantity 
+			quantity = this.value; 
+			
+			row = this.name; // quan0, quan1, quan2... 
+			
+			index = parseInt(row.substr(4)); 
+
+			// Getting cost of selected dish
+			cost = getCost(index);
+			dishCost = cost.toFixed(2);
+
+			//Updating total cost textbox 
+			document.getElementsByName('cost')[index].value = dishCost; 
+			
+			updateTotal();
+		});
+
+		// Radio Button Code 
+		$('input[type="radio"]').click(function(){
+			if( $('input[type="radio"]:checked').val()== 'delivery'){
+				$(".visibility").toggle();
+				delivery = true; 
+			}else{
+				$(".visibility").toggle(); 
+			}
+		});
+	
+		function updateTotal(){ 
+			for(i=0;i<menuItems.length; i++){
+				x = document.getElementsByName('cost')[i].value;
+				if( x !== ""){
+					itemTotalCost = (parseFloat(itemTotalCost) + parseFloat(x)).toFixed(2);
+				}
+			}
+			//use itemTotalCost to update the subtotal 
+			document.getElementById("subtotal").value = itemTotalCost;
+
+			//calculate taxes and input 
+			taxes = itemTotalCost * 0.0625; 
+			document.getElementById("tax").value = taxes.toFixed(2);
+
+			//calculate Total
+			grandTotal = (parseFloat(itemTotalCost) + parseFloat(taxes)).toFixed(2);
+			document.getElementById("total").value = grandTotal;
+		}
+	});
+
+	function getCost(x){ 
+		//accessing cost of menu item 
+		price = menuItems[x].cost;
+
+		// total cost of each dish 
+		total = quantity * price;
+
+		purchases.push(total); 
+		return total;
+	} 
+
+	// Verification 
+	function validation(){
+		//Grab last name  
+		lname = document.getElementsByName('lname')[0].value;
+
+		//Grab Phone Number 
+		p = document.getElementsByName('phone')[0].value;
+		
+		// validate phone number 
+		valid = verification(p);
+		
+		if( lname !== ""){ 
+			if(valid == true){
+				if( itemTotalCost !== 0 ){
+					if(delivery==true){
+						s = document.getElementsByName('street')[0].value;
+						c = document.getElementsByName('city')[0].value;
+						
+						if(s !== "" ){
+							if(c !== ""){
+								fixTime(true);	
+								display(true);
+							}else{
+								alert("Your order is invalid. Please enter a city.");
+							}
+						}else{
+							alert("Your order is invalid. Please enter a street address.");
+						}
+					}else{
+						fixTime(false);
+						display(false);
+					}
+				}else{
+					alert("Your order needs a minimum of one purchase.");
+				}
+			}else{
+				alert("Your order is invalid. Please enter a valid phone number.");
+			}
+		}else{
+			alert("Your order is invalid. Please enter your last name."); 
+		}
+	}
+
+	// TO-DO: Is this the proper verification? 
+	function verification(p){
+		structure = /^\d{10}$/;
+		if(p.match(structure)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	function display(x){
+		alert("Thank you for your order!"); 
+		orderWindow = window.open('/', 'Order', 'width=500,height=500');
+		
+		orderWindow.document.write(`${lname}'s Order! <br> <br> `);
+
+		orderWindow.document.write(`${ chosen() }`);
+
+		if(x = true){
+			orderWindow.document.write(`Delivery Time: ${time} <br> <br>`);
+		}else{
+			orderWindow.document.write(`Pickup Time: ${time} <br> <br>`);
+		}
+		orderWindow.document.write(`Total Cost: $${grandTotal} <br> <br>`); 
+
+		orderWindow.document.close();
+	}
+
+	function chosen(){
+		c = "";
+		for(i=0;i<menuItems.length; i++){
+			x = document.getElementsByName('cost')[i].value; 
+			if( x !== "0"){
+				c += menuItems[i].name + " " + "$"+ x + " <br> <br>";
+			}
+		}
+		return c;
+	}
+
+	function fixTime(x){
+		minutes = 0;
+		timeRN = new Date($.now());
+		if (x == true){
+			minutes = parseInt(timeRN.getMinutes())+30;
+		}else {
+			minutes = parseInt(timeRN.getMinutes())+15;
+		}
+
+		hrs = parseInt(timeRN.getHours());
+
+		if(minutes >= 60){
+			minutes = minutes - 60;
+			hrs +=1;
+		}
+		time = hrs + ":"+ minutes; 
+	}
+
+</script>
+</body>
+</html>
