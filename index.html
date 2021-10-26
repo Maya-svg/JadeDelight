@@ -284,6 +284,10 @@ function makeSelect(name, minRange, maxRange)
 			minutes = minutes - 60;
 			hrs +=1;
 		}
+		
+		if(minutes < 10){
+			minutes =  "0" + minutes;
+		}
 		time = hrs + ":"+ minutes; 
 	}
 
